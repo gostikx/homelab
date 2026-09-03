@@ -1,0 +1,14 @@
+volumes:
+  mobsf_data:
+
+services:
+  mobsf:
+    image: opensecurity/mobile-security-framework-mobsf:v4.5.2
+    container_name: mobsf
+    ports:
+      - "8000:8000"
+    environment:
+      - MOBSF_ANALYZER_IDENTIFIER=[ip-android-emulator]:5555
+      - MOBSF_DYNAMIC_ANALYSIS_MODE=proxy
+    volumes:
+      - mobsf_data:/home/mobsf/.MobSF:z
