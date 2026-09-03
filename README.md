@@ -22,6 +22,9 @@ $ ./install-opentofu.sh --install-method deb
 
 # Remove the installer:
 $ rm -f install-opentofu.sh
+
+# Change the OpenTofu provider download directory using an OS environment variable:
+export TF_DATA_DIR="$HOME/.opentofu/opentofu"
 ```
 
 [See installation documentation](https://opentofu.org/docs/v1.12/intro/install)

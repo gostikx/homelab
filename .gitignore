@@ -1,0 +1,3 @@
+# Exclude files for opentofu
+opentofu/environment.auto.tfvars
+opentofu/.terraform.lock.hcl
