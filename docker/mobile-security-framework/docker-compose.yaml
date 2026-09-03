@@ -6,9 +6,14 @@ services:
     image: opensecurity/mobile-security-framework-mobsf:v4.5.2
     container_name: mobsf
     ports:
-      - "8000:8000"
+      - 8000:8000
     environment:
       - MOBSF_ANALYZER_IDENTIFIER=[ip-android-emulator]:5555
       - MOBSF_DYNAMIC_ANALYSIS_MODE=proxy
     volumes:
       - mobsf_data:/home/mobsf/.MobSF:z
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://127.0.0.1:8000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

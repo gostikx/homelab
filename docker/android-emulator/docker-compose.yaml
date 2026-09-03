@@ -2,7 +2,8 @@ services:
   android-emulator:
     image: budtmo/docker-android:emulator_9.0
     container_name: android-emulator
-    user: "9901:9901"
+    restart: unless-stopped
+    user: 9901:9901
     privileged: true
     devices:
       - /dev/kvm:/dev/kvm
@@ -14,6 +15,6 @@ services:
       - WEB_VNC=true
       - EMULATOR_ADDITIONAL_ARGS=-cores 2 -memory 3072 -gpu guest -writable-system
     ports:
-      - "6080:6080"  # Веб-интерфейс (NoVNC) для просмотра экрана Android
-      - "5554:5554"  # Порт консоли эмулятора
-      - "5555:5555"  # ADB порт для MobSF
+      - 6080:6080
+      - 5554:5554
+      - 5555:5555
