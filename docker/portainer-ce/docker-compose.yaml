@@ -6,13 +6,13 @@ services:
     image: portainer/portainer-ce:2.45.0-alpine
     container_name: portainer-ce
     ports:
-      - 8000:8000
+      - 9000:9000
       - 9443:9443
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - portainer_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "curl http://127.0.0.1:8000"]
+      test: ["CMD-SHELL", "curl http://127.0.0.1:9000"]
       interval: 10s
       timeout: 5s
       retries: 5
