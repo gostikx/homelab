@@ -7,6 +7,8 @@ $ curl -fsSL https://get.docker.com -o get-docker.sh
 $ sudo sh ./get-docker.sh --dry-run
 ```
 
+[See installation documentation](https://docs.docker.com/engine/install)
+
 ### Install Opentofu
 
 ```sh
