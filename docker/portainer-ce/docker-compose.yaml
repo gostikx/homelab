@@ -2,14 +2,29 @@ volumes:
   portainer_data:
 
 services:
+  mkcert:
+    image: jeffcaldwellca/mkcertweb:4.3.4
+    container_name: mkcertweb
+    user: root:root
+    volumes:
+      - /etc/letsencrypt/live:/etc/letsencrypt/live:z
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "mkdir /etc/letsencrypt/live/$$DOMAIN && \
+      /usr/local/bin/mkcert \
+      -cert-file /etc/letsencrypt/live/$$DOMAIN/cert.pem \
+      -key-file /etc/letsencrypt/live/$$DOMAIN/private_key.pem \
+      $$DOMAIN"
+    environment:
+      - DOMAIN=localhost
+
   portainer-ce:
     image: portainer/portainer-ce:2.45.0-alpine
     container_name: portainer-ce
-    command:
-      - "--sslcert"
-      - "/etc/letsencrypt/live/[YOUR_DOMAIN]/portainer.crt"
-      - "--sslkey"
-      - "/etc/letsencrypt/live/[YOUR_DOMAIN]/portainer.key"
+    restart: always
+    command: >
+      "--sslcert /etc/letsencrypt/live/$$DOMAIN/cert.pem \
+      --sslkey /etc/letsencrypt/live/$$DOMAIN/private_key.pem"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
@@ -17,6 +32,10 @@ services:
     ports:
       - 9000:9000
       - 9443:9443
+    depensd_on:
+      - mkcert
+    environment:
+      - DOMAIN=localhost
     healthcheck:
       test: ["CMD-SHELL", "curl http://127.0.0.1:9000"]
       interval: 10s
