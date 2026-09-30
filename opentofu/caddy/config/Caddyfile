@@ -1,0 +1,19 @@
+portainer.homelab.dev {
+    tls /data/caddy/certificates/local/portainer/certificate.pem /data/caddy/certificates/local/portainer/key.pem
+
+    reverse_proxy portainer-ce:9000
+
+    log {
+        output file /var/log/caddy/portainer_access.log
+    }
+}
+
+forgejo.homelab.dev {
+    tls /data/caddy/certificates/local/forgejo/certificate.pem /data/caddy/certificates/local/forgejo/key.pem
+
+    reverse_proxy forgejo:3000
+
+    log {
+        output file /var/log/caddy/forgejo_access.log
+    }
+}
