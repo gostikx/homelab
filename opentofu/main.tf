@@ -1,20 +1,38 @@
-terraform {
-  backend "local" {}
+variable "shared_state_dir" { type = string }
+variable "ssh_config" {
+  type = object({
+    host        = string
+    port        = number
+    user        = string
+    key         = string
+  })
 }
 
-resource "null_resource" "remote_commands" {
+provider "docker" {
+  host = "ssh://${ssh_config.user}@${ssh_config.host}:${ssh_config.port}"
+}
 
-  connection {
-    type        = "ssh"
-    host        = var.ssh_host
-    user        = var.ssh_user
-    password    = var.ssh_password
-    timeout     = "60s"
-  }
+resource "docker_network" "homelab_net" {
+  name = "homelab-network"
+}
 
-  provisioner "remote-exec" {
-    inline = [
-      "whoami",
-    ]
-  }
+module "portainer" {
+  source            = "./portainer"
+  ssh_config        = var.ssh_config
+  shared_state_dir  = var.shared_state_dir
+  network_name      = docker_network.homelab_net.name
+}
+
+module "caddy" {
+  source            = "./caddy"
+  ssh_config        = var.ssh_config
+  shared_state_dir  = var.shared_state_dir
+  network_name      = docker_network.homelab_net.name
+}
+
+module "forgejo" {
+  source            = "./forgejo"
+  ssh_config        = var.ssh_config
+  shared_state_dir  = var.shared_state_dir
+  network_name      = docker_network.homelab_net.name
 }
