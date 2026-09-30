@@ -33,6 +33,9 @@ provider "docker" {
 
 resource "docker_network" "homelab_net" {
   name = "homelab-network"
+  attachable = true
+
+  lifecycle { ignore_changes = [attachable] }
 }
 
 module "portainer" {

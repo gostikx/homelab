@@ -27,6 +27,12 @@ deploy-postgres:
 	tofu workspace select postgresql
 	tofu apply -var-file="variables.tfvars" -auto-approve
 
+.PHONY: destroy-postgres
+destroy-postgres:
+	tofu workspace select postgresql
+	tofu apply -destroy -var-file="variables.tfvars" -auto-approve
+
+
 .PHONY: deploy-home-assistant
 deploy-home-assistant:
 	tofu workspace select home_assistant
