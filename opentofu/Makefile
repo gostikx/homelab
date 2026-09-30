@@ -5,6 +5,7 @@ init:
 	tofu workspace new caddy
 	tofu workspace new forgejo
 	tofu workspace new postgresql
+	tofu workspace new home_assistant
 
 .PHONY: deploy-portainer
 deploy-portainer:
@@ -24,4 +25,9 @@ deploy-forgejo:
 .PHONY: deploy-postgres
 deploy-postgres:
 	tofu workspace select postgresql
+	tofu apply -var-file="variables.tfvars" -auto-approve
+
+.PHONY: deploy-home-assistant
+deploy-home-assistant:
+	tofu workspace select home_assistant
 	tofu apply -var-file="variables.tfvars" -auto-approve

@@ -24,6 +24,7 @@ locals {
   enable_caddy          = local.ws == "caddy"
   enable_forgejo        = local.ws == "forgejo"
   enable_postgres       = local.ws == "postgresql"
+  enable_home_assistant = local.ws == "home_assistant"
 }
 
 provider "docker" {
@@ -59,5 +60,12 @@ module "postgresql" {
   count             = local.enable_postgres ? 1 : 0
   source            = "./postgresql"
   postgres_config   = var.postgres_config
+  network_name      = docker_network.homelab_net.name
+}
+
+module "home_assistant" {
+  count             = local.enable_home_assistant ? 1 : 0
+  source            = "./home-assistant"
+  ssh_config        = var.ssh_config
   network_name      = docker_network.homelab_net.name
 }
