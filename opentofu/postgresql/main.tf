@@ -1,6 +1,4 @@
 variable "network_name"     { type = string }
-variable "shared_state_dir" { type = string}
-
 variable "postgres_config" {
   type = object({
     user      = string
@@ -9,10 +7,6 @@ variable "postgres_config" {
 }
 
 terraform {
-  backend "local" {
-    path          = "${var.shared_state_dir}/postgres/terraform.tfstate"
-    workspace_dir = "${var.shared_state_dir}/postgres"
-  }
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"
@@ -46,7 +40,7 @@ resource "docker_container" "postgres" {
   }
   
   env = [
-    "POSTGRES_USER=${postgres_config.user}",
-    "POSTGRES_PASSWORD=${postgres_config.password}"
+    "POSTGRES_USER=${var.postgres_config.user}",
+    "POSTGRES_PASSWORD=${var.postgres_config.password}"
   ]
 }

@@ -1,6 +1,4 @@
-variable "network_name"     { type = string }
-variable "shared_state_dir" { type = string}
-
+variable "network_name" { type = string }
 variable "ssh_config" {
   type = object({
     host        = string
@@ -11,10 +9,6 @@ variable "ssh_config" {
 }
 
 terraform {
-  backend "local" {
-    path          = "${var.shared_state_dir}/caddy/terraform.tfstate"
-    workspace_dir = "${var.shared_state_dir}/caddy"
-  }
   required_providers {
     docker = {
       source  = "kreuzwerker/docker"

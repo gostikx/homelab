@@ -1,25 +1,27 @@
-export TF_VAR_shared_state_dir := $(HOME)/.opentofu/shared-states
-
-.PHONY: deploy-forgejo
-deploy-forgejo:
-	mkdir -p $(TF_VAR_shared_state_dir)/forgejo
-	tofu init
-	tofu apply -target=module.forgejo -var-file="variables.tfvars" -auto-approve
+.PHONY: init
+init:
+	tofu init -backend-config="backend.tfvars"
+	tofu workspace new portainer
+	tofu workspace new caddy
+	tofu workspace new forgejo
+	tofu workspace new postgresql
 
 .PHONY: deploy-portainer
 deploy-portainer:
-	mkdir -p $(TF_VAR_shared_state_dir)/portainer
-	tofu init
-	tofu apply -target=module.portainer -var-file="variables.tfvars" -auto-approve
+	tofu workspace select portainer
+	tofu apply -var-file="variables.tfvars" -auto-approve
 
 .PHONY: deploy-caddy
 deploy-caddy:
-	mkdir -p $(TF_VAR_shared_state_dir)/caddy
-	tofu init
-	tofu apply -target=module.caddy -var-file="variables.tfvars" -auto-approve
+	tofu workspace select caddy
+	tofu apply -var-file="variables.tfvars" -auto-approve
+
+.PHONY: deploy-forgejo
+deploy-forgejo:
+	tofu workspace select forgejo
+	tofu apply -var-file="variables.tfvars" -auto-approve
 
 .PHONY: deploy-postgres
-deploy-caddy:
-	mkdir -p $(TF_VAR_shared_state_dir)/postgres
-	tofu init
-	tofu apply -target=module.postgres -var-file="variables.tfvars" -auto-approve
+deploy-postgres:
+	tofu workspace select postgresql
+	tofu apply -var-file="variables.tfvars" -auto-approve
