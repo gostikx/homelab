@@ -1,10 +1,13 @@
-variable "ssh_host"     { type = string }
-variable "ssh_user"     { type = string }
-variable "network_name" { type = string }
+variable "network_name"     { type = string }
+variable "shared_state_dir" { type = string}
 
-variable "shared_state_dir" {
-  type        = string
-  description = "Глобальный путь к состояниям, передаваемый из системы"
+variable "ssh_config" {
+  type = object({
+    host        = string
+    port        = number
+    user        = string
+    key         = string
+  })
 }
 
 terraform {
@@ -18,10 +21,6 @@ terraform {
       version  = ">= 4.0.0"
     }
   }
-}
-
-provider "docker" {
-  host = "ssh://${var.ssh_user}@${var.ssh_host}:22"
 }
 
 resource "docker_image" "portainer-ce" {
@@ -46,21 +45,6 @@ resource "docker_container" "portainer-ce" {
     host_path      = "/var/run/docker.sock"
     container_path = "/var/run/docker.sock"
     read_only      = true
-  }
-
-  ports {
-    internal = 8000
-    external = 8000
-  }
-
-  ports {
-    internal = 9000
-    external = 9000
-  }
-
-  ports {
-    internal = 9433
-    external = 9433
   }
 
   networks_advanced {

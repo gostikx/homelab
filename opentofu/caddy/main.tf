@@ -1,11 +1,13 @@
-variable "ssh_host"     { type = string }
-variable "ssh_user"     { type = string }
-variable "ssh_key"      { type = string }
-variable "network_name" { type = string }
+variable "network_name"     { type = string }
+variable "shared_state_dir" { type = string}
 
-variable "shared_state_dir" {
-  type        = string
-  description = "Глобальный путь к состояниям, передаваемый из системы"
+variable "ssh_config" {
+  type = object({
+    host        = string
+    port        = number
+    user        = string
+    key         = string
+  })
 }
 
 terraform {
@@ -28,9 +30,9 @@ terraform {
 resource "null_resource" "setup_server_dirs" {
   connection {
     type        = "ssh"
-    host        = var.ssh_host
-    user        = var.ssh_user
-    private_key = file(var.ssh_key)
+    host        = var.ssh_config.host
+    user        = var.ssh_config.user
+    private_key = file(var.ssh_config.key)
   }
 
   provisioner "remote-exec" {
@@ -47,9 +49,9 @@ resource "null_resource" "upload_caddy_config" {
 
   connection {
     type        = "ssh"
-    host        = var.ssh_host
-    user        = var.ssh_user
-    private_key = file(var.ssh_key)
+    host        = var.ssh_config.host
+    user        = var.ssh_config.user
+    private_key = file(var.ssh_config.key)
   }
 
   provisioner "file" {
@@ -70,9 +72,9 @@ resource "null_resource" "upload_caddy_certs" {
 
   connection {
     type        = "ssh"
-    host        = var.ssh_host
-    user        = var.ssh_user
-    private_key = file(var.ssh_key)
+    host        = var.ssh_config.host
+    user        = var.ssh_config.user
+    private_key = file(var.ssh_config.key)
   }
 
   provisioner "file" {
@@ -86,10 +88,6 @@ resource "null_resource" "upload_caddy_certs" {
       "find /opt/stacks/caddy/certs -type f -exec chmod 600 {} \\;"
     ]
   }
-}
-
-provider "docker" {
-  host = "ssh://${var.ssh_user}@${var.ssh_host}:22"
 }
 
 resource "docker_image" "caddy" {
