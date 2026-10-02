@@ -11,13 +11,7 @@ resource "null_resource" "setup_server_dirs" {
       "mkdir -p /opt/stacks/mosquitto/config",
       "chmod 700 /opt/stacks/mosquitto/config",
       "mkdir -p /var/stacks/mosquitto/log",
-      # Контейнер mosquitto работает под пользователем mosquitto (uid/gid 1883)
-      # и должен писать сюда лог, а пользователь devops — читать его.
-      # 707 даёт devops (владелец, создавший каталог) и mosquitto (others)
-      # полный доступ к каталогу, 666 — к самому файлу лога.
-      "chmod 707 /var/stacks/mosquitto/log",
-      "touch /var/stacks/mosquitto/log/mosquitto.log",
-      "chmod 666 /var/stacks/mosquitto/log/mosquitto.log"
+      "chmod 666 /var/stacks/mosquitto/log"
     ]
   }
 }
