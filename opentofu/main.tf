@@ -34,8 +34,6 @@ provider "docker" {
   host = "ssh://${var.ssh_config.user}@${var.ssh_config.host}:${var.ssh_config.port}"
 }
 
-# Общая docker-сеть создаётся один раз в workspace "network".
-# В остальных workspace ресурс имеет count = 0, поэтому они её не трогают.
 resource "docker_network" "homelab_net" {
   count      = local.manage_network ? 1 : 0
   name       = var.network_name
@@ -44,11 +42,17 @@ resource "docker_network" "homelab_net" {
   lifecycle { ignore_changes = [attachable] }
 }
 
+data "docker_network" "homelab_net" {
+  count = local.manage_network ? 0 : 1
+  name  = var.network_name
+}
+
 module "portainer" {
   count        = local.enable_portainer ? 1 : 0
   source       = "./portainer"
   ssh_config   = var.ssh_config
   network_name = var.network_name
+  depends_on   = [data.docker_network.homelab_net]
 }
 
 module "caddy" {
@@ -56,6 +60,7 @@ module "caddy" {
   source       = "./caddy"
   ssh_config   = var.ssh_config
   network_name = var.network_name
+  depends_on   = [data.docker_network.homelab_net]
 }
 
 module "forgejo" {
@@ -63,6 +68,7 @@ module "forgejo" {
   source       = "./forgejo"
   ssh_config   = var.ssh_config
   network_name = var.network_name
+  depends_on   = [data.docker_network.homelab_net]
 }
 
 module "postgresql" {
@@ -70,6 +76,7 @@ module "postgresql" {
   source          = "./postgresql"
   postgres_config = var.postgres_config
   network_name    = var.network_name
+  depends_on      = [data.docker_network.homelab_net]
 }
 
 module "home_assistant" {
@@ -77,6 +84,7 @@ module "home_assistant" {
   source       = "./home-assistant"
   ssh_config   = var.ssh_config
   network_name = var.network_name
+  depends_on   = [data.docker_network.homelab_net]
 }
 
 module "mosquitto" {
@@ -84,4 +92,5 @@ module "mosquitto" {
   source       = "./mosquitto"
   ssh_config   = var.ssh_config
   network_name = var.network_name
+  depends_on   = [data.docker_network.homelab_net]
 }
