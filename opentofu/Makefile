@@ -1,55 +1,42 @@
-.PHONY: init
-init:
-	tofu init -backend-config="backend.tfvars"
-	tofu workspace new network
-	tofu workspace new portainer
-	tofu workspace new caddy
-	tofu workspace new forgejo
-	tofu workspace new postgresql
-	tofu workspace new home_assistant
-	tofu workspace new mosquitto
+# Корневой Makefile homelab/opentofu — единая точка входа для управления сервисами.
+#
+# ВАЖНО: команды запускаются из каталога opentofu/ (например: make deploy-caddy),
+# т.к. пути backend.tfvars / variables.tfvars заданы относительно него.
+# Цели сервисов вынесены в <service>/Makefile и подключаются ниже через include.
 
-.PHONY: deploy-network
-deploy-network:
+include caddy/Makefile
+include forgejo/Makefile
+include home-assistant/Makefile
+include mosquitto/Makefile
+include portainer/Makefile
+include postgresql/Makefile
+
+# Файлы конфигурации относительно каталога opentofu/ (откуда запускается make).
+BACKEND_CONFIG := backend.tfvars
+VAR_FILE       := variables.tfvars
+
+.DEFAULT_GOAL := help
+
+.PHONY: help init deploy-network destroy-network
+
+init: #? Инициализировать провайдеры и создать все рабочие пространства (workspaces)
+	tofu init -backend-config="$(BACKEND_CONFIG)"
+	tofu workspace select -or-create network
+	tofu workspace select -or-create portainer
+	tofu workspace select -or-create caddy
+	tofu workspace select -or-create forgejo
+	tofu workspace select -or-create postgresql
+	tofu workspace select -or-create home_assistant
+	tofu workspace select -or-create mosquitto
+
+deploy-network: #? Создать общую docker-сеть homelab-network (нужна до запуска сервисов)
 	tofu workspace select network
-	tofu apply -var-file="variables.tfvars" -auto-approve
+	tofu apply -var-file="$(VAR_FILE)" -auto-approve
 
-.PHONY: destroy-network
-destroy-network:
+destroy-network: #? Удалить общую docker-сеть (сначала остановите все сервисы)
 	tofu workspace select network
-	tofu apply -destroy -var-file="variables.tfvars" -auto-approve
+	tofu apply -destroy -var-file="$(VAR_FILE)" -auto-approve
 
-.PHONY: deploy-portainer
-deploy-portainer:
-	tofu workspace select portainer
-	tofu apply -var-file="variables.tfvars" -auto-approve
-
-.PHONY: deploy-caddy
-deploy-caddy:
-	tofu workspace select caddy
-	tofu apply -var-file="variables.tfvars" -auto-approve
-
-.PHONY: deploy-forgejo
-deploy-forgejo:
-	tofu workspace select forgejo
-	tofu apply -var-file="variables.tfvars" -auto-approve
-
-.PHONY: deploy-postgres
-deploy-postgres:
-	tofu workspace select postgresql
-	tofu apply -var-file="variables.tfvars" -auto-approve
-
-.PHONY: destroy-postgres
-destroy-postgres:
-	tofu workspace select postgresql
-	tofu apply -destroy -var-file="variables.tfvars" -auto-approve
-
-.PHONY: deploy-home-assistant
-deploy-home-assistant:
-	tofu workspace select home_assistant
-	tofu apply -var-file="variables.tfvars" -auto-approve
-
-.PHONY: deploy-mosquitto
-deploy-mosquitto:
-	tofu workspace select mosquitto
-	tofu apply -var-file="variables.tfvars" -auto-approve
+help: #? Показать этот список команд
+	@printf "\033[34;01mУправление сервисами homelab (OpenTofu):\033[0m\n"
+	@awk 'BEGIN { FS = ":.*#\\? " } /^[a-zA-Z0-9_-]+:.*#\? / { printf "\033[1;31m%-30s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
