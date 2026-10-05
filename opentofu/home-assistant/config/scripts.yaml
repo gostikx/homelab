@@ -1,0 +1,27 @@
+budilnik_plavnyj_rassvet_zvuka:
+  alias: 'Будильник: Плавный рассвет звука'
+  sequence:
+  - action: media_player.volume_set
+    target:
+      device_id: f86f5a81adb2523d9b511305d44df0d9
+    data:
+      volume_level: 0.05
+  - action: media_player.play_media
+    data:
+      media:
+        media_content_id: https://music.yandex.ru/album/32470164/track/129108017
+        media_content_type: music
+        metadata: {}
+    target:
+      device_id: f86f5a81adb2523d9b511305d44df0d9
+  - repeat:
+      count: 4
+      sequence:
+      - delay: 00:00:15
+      - action: media_player.volume_up
+        target:
+          device_id:
+          - f86f5a81adb2523d9b511305d44df0d9
+        data: {}
+  mode: restart
+  icon: mdi:alarm

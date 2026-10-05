@@ -1,30 +1,57 @@
-variable "network_name" { type = string }
-variable "ssh_config" {
-  type = object({
-    host        = string
-    port        = number
-    user        = string
-    key         = string
-  })
-}
+# variable "network_name" { type = string }
+# variable "ssh_config" {
+#   type = object({
+#     host        = string
+#     port        = number
+#     user        = string
+#     key         = string
+#   })
+# }
 
-terraform {
-  required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version  = ">= 4.0.0" 
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = "~> 3.3.2"
-    }
-  }
-}
+# terraform {
+#   required_providers {
+#     docker = {
+#       source  = "kreuzwerker/docker"
+#       version  = ">= 4.0.0" 
+#     }
+#     null = {
+#       source  = "hashicorp/null"
+#       version = ">= 3.0.0"
+#     }
+#     http = {
+#       source  = "hashicorp/http"
+#       version  = ">= 3.4"
+#     }
+#     local = {
+#       source  = "hashicorp/local"
+#       version  = ">= 2.5"
+#     }
+#   }
+# }
 
 resource "null_resource" "extract_hacs_locally" {
   provisioner "local-exec" {
     command = "mkdir -p .tmp/hacs && unzip -o hacs.zip -d .tmp/hacs/"
   }
+}
+
+# 1. Скачиваем файл из интернета
+data "http" "download_file" {
+  url = "https://github.com"
+
+  # Необязательно: можно задать заголовки, если сервер требует авторизацию или User-Agent
+  request_headers = {
+    Accept = "application/octet-stream"
+  }
+}
+
+# 2. Сохраняем скачанный файл на локальный диск
+resource "local_sensitive_file" "save_zip" {
+  # local_sensitive_file используется вместо local_file, 
+  # чтобы бинарный контент (zip) не выводился в консоль (stdout) при tofu apply
+
+  content_base64 = data.http.download_file.response_body_base64
+  filename       = "${path.module}/plugin.zip"
 }
 
 resource "null_resource" "setup_server_dirs" {
@@ -74,12 +101,14 @@ resource "docker_image" "home_assistant" {
 resource "docker_container" "home_assistant" {
   depends_on = [null_resource.upload_hacs]
 
-  name  = "homeassistant"
-  image = docker_image.home_assistant.image_id
+  name    = "homeassistant"
+  image   = docker_image.home_assistant.image_id
   restart = "always"
 
-  network_mode = "host"
-
+  # HA и mosquitto живут в одной docker-сети (homelab-network): HA обращается
+  # к брокеру по имени контейнера (mosquitto:1883) напрямую, без TLS.
+  # ВНИМАНИЕ: если понадобится mDNS/SSDP-обнаружение устройств, верните
+  # network_mode = "host" и опубликуйте mosquitto на 127.0.0.1:1883 вместо этого.
   env = [
     "TZ=Europe/Moscow"
   ]

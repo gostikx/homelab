@@ -1,0 +1,17 @@
+- id: '1790758506639'
+  alias: 'Будильник: Запуск по будням'
+  description: Плавный запуск Яндекс Станции
+  triggers:
+  - at: 09:30:00
+    trigger: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  conditions: []
+  actions:
+  - action: script.budilnik_plavnyj_rassvet_zvuka
+    data: {}
+  mode: single

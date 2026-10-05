@@ -1,0 +1,127 @@
+terraform {
+  required_providers {
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.4"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.5"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4"
+    }
+  }
+}
+
+# === ВХОДНЫЕ ПЕРЕМЕННЫЕ ===
+variable "ssh_host" {
+  type    = string
+  default = "111.222.33.44" # IP вашего сервера Home Assistant
+}
+
+variable "ssh_user" {
+  type    = string
+  default = "root"
+}
+
+variable "ssh_password" {
+  type      = string
+  sensitive = true
+  default   = "your_secure_password" # Лучше передавать через TF_VAR_ или внешние файлы
+}
+
+variable "ha_config_dir" {
+  type    = string
+  default = "/config" # Путь к конфигурации HA на сервере
+}
+
+# === 1. СКАЧИВАНИЕ АРХИВА ===
+data "http" "download_plugin" {
+  url = "https://github.com"
+  request_headers = {
+    Accept = "application/octet-stream"
+  }
+}
+
+# === 2. СОХРАНЕНИЕ НА ЛОКАЛЬНЫЙ ДИСК ===
+resource "local_sensitive_file" "plugin_zip" {
+  content_base64 = data.http.download_plugin.response_body_base64
+  filename       = "${path.module}/tmp_plugin.zip"
+}
+
+# === 3. ЛОКАЛЬНАЯ РАСПАКОВКА ===
+# Провайдер archive распакует zip-файл в локальную временную папку
+data "archive_file" "unzip_plugin" {
+  type        = "zip"
+  source_file = local_sensitive_file.plugin_zip.filename
+  output_path = "${path.module}/tmp_extracted/"
+  
+  # Ждем, пока файл физически запишется на диск
+  depends_on = [local_sensitive_file.plugin_zip] 
+}
+
+# === 4. ОТПРАВКА НА СЕРВЕР И НАСТРОЙКА ===
+resource "terraform_data" "deploy_to_server" {
+  # Триггер сработает, если изменится содержимое скачанного архива
+  triggers_replace = [
+    data.http.download_plugin.response_body_base64
+  ]
+
+  # SSH-подключение для provisioner-ов
+  connection {
+    type     = "ssh"
+    host     = var.ssh_host
+    user     = var.ssh_user
+    password = var.ssh_password
+    # Если используете SSH-ключ вместо пароля, замените 'password' на:
+    # private_key = file("~/.ssh/id_rsa")
+  }
+
+  # Шаг А: Создаем структуру папок на сервере перед копированием
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p ${var.ha_config_dir}/custom_components/"
+    ]
+  }
+
+  # Шаг Б: Копируем распакованные файлы по SSH (Используем встроенный file provisioner)
+  # Внимание: GitHub архивы создают подпапку вида "имя_репозитория-master". 
+  # Внутри нее лежит нужная нам папка custom_components.
+  provisioner "file" {
+    # Ищем внутри tmp_extracted/ папки с плагинами
+    # Нам нужно передать содержимое папки custom_components из архива
+    source      = "${path.module}/tmp_extracted/"
+    destination = "${var.ha_config_dir}/" 
+  }
+
+  # Шаг В: Выставляем правильные права и удаляем лишнее (опционально)
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Настройка прав доступа...'",
+      "chmod -R 755 ${var.ha_config_dir}/custom_components/",
+      # Опционально: команда для перезапуска Home Assistant (если HA работает в Docker)
+      # "docker restart homeassistant" 
+    ]
+  }
+
+  # Ждем, пока локальная распаковка завершится
+  depends_on = [data.archive_file.unzip_plugin]
+}
+
+# === 5. ОЧИСТКА ЛОКАЛЬНОГО МУСОРА ===
+# OpenTofu не умеет сам удалять файлы после apply штатными средствами.
+# Используем local-exec provisioner для удаления временных файлов с вашего ПК.
+resource "terraform_data" "local_cleanup" {
+  triggers_replace = [
+    terraform_data.deploy_to_server.id
+  ]
+
+  provisioner "local-exec" {
+    # Команда для Linux/macOS. Для Windows замените на: rm -Force ...
+    command = "rm -f ${path.module}/tmp_plugin.zip && rm -rf ${path.module}/tmp_extracted/"
+  }
+
+  depends_on = [terraform_data.deploy_to_server]
+}
