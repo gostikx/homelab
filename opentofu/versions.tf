@@ -10,5 +10,9 @@ terraform {
       source  = "hashicorp/null"
       version = "~> 3.3.2"
     }
+    ssh = {
+      source  = "loafoe/ssh"
+      version = "~> 2.7.0"
+    }
   }
 }
