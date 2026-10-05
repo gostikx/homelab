@@ -1,6 +1,24 @@
-portainer.homelab.dev {
-    tls /data/caddy/certificates/local/portainer/certificate.pem /data/caddy/certificates/local/portainer/key.pem
+{
+    acme_ca https://acme.homelab.dev:9000/acme/acme/directory
+    acme_ca_root /etc/ca/root_ca.crt
 
+    layer4 {
+        :8883 {
+            # принимаем только TLS с ожидаемым SNI
+            @mqtt tls sni mqtt.homelab.dev
+            route @mqtt {
+                tls
+                proxy mosquitto:1883
+            }
+        }
+    }
+}
+
+#mqtt.homelab.dev {
+#    respond "MQTT broker: mqtts://mqtt.homelab.dev:8883" 200
+#}
+
+portainer.homelab.dev {
     reverse_proxy portainer-ce:9000
 
     log {
@@ -8,12 +26,17 @@ portainer.homelab.dev {
     }
 }
 
-forgejo.homelab.dev {
-    tls /data/caddy/certificates/local/forgejo/certificate.pem /data/caddy/certificates/local/forgejo/key.pem
+#forgejo.homelab.dev {
+#    reverse_proxy forgejo:3000
+#
+#    log {
+#        output file /var/log/caddy/forgejo_access.log
+#    }
+#}
 
-    reverse_proxy forgejo:3000
-
-    log {
-        output file /var/log/caddy/forgejo_access.log
-    }
-}
+#adguard.homelab.dev {
+#    reverse_proxy adguard-home:80
+#
+#    log {
+#        output file /var/log/caddy/adguard_access.log
+#    }

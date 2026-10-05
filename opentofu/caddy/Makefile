@@ -1,8 +1,6 @@
-# Цели сервиса Caddy (reverse proxy с автоматическим HTTPS).
-# Подключается из ../Makefile — запускать из каталога opentofu/.
 .PHONY: deploy-caddy destroy-caddy
 
-deploy-caddy: #? Развернуть Caddy — reverse proxy с автоматическим HTTPS
+deploy-caddy: deploy-smallstep-ca #? Развернуть Caddy — reverse proxy с автоматическим HTTPS (сначала SmallStepCA)
 	tofu workspace select caddy
 	tofu apply -var-file="variables.tfvars" -auto-approve
 

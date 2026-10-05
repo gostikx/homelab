@@ -1,26 +1,11 @@
-variable "network_name" { type = string }
-variable "ssh_config" {
-  type = object({
-    host        = string
-    port        = number
-    user        = string
-    key         = string
-  })
+locals {
+  host_network_aliases = [
+    "caddy.homelab.dev",
+    "portainer.homelab.dev",
+    "forgejo.homelab.dev",
+    "adguard.homelab.dev",
+  ]
 }
-
-terraform {
-  required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version  = ">= 4.0.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = ">= 3.0.0"
-    }
-  }
-}
-
 resource "null_resource" "setup_server_dirs" {
   connection {
     type        = "ssh"
@@ -32,14 +17,23 @@ resource "null_resource" "setup_server_dirs" {
   provisioner "remote-exec" {
     inline = [
       "mkdir -p /opt/stacks/caddy/config",
-      "mkdir -p /opt/stacks/caddy/certs",
-      "chmod 700 /opt/stacks/caddy",
+      "mkdir -p /opt/stacks/caddy/data",
+      "mkdir -p /opt/stacks/caddy/ca/certs",
+      "install -m 600 ${var.ca_root_path}/root_ca.crt /opt/stacks/caddy/ca/certs/root_ca.crt",
+      "install -m 600 ${var.ca_root_path}/intermediate_ca.crt /opt/stacks/caddy/ca/certs/intermediate_ca.crt",
+      "chmod 700 /opt/stacks/caddy/config /opt/stacks/caddy/data /opt/stacks/caddy/ca",
+
+      "mkdir -p /var/stacks/caddy/log",
     ]
   }
 }
 
 resource "null_resource" "upload_caddy_config" {
   depends_on = [null_resource.setup_server_dirs]
+
+  triggers = {
+    caddyfile = filesha256("${path.module}/config/Caddyfile")
+  }
 
   connection {
     type        = "ssh"
@@ -61,7 +55,15 @@ resource "null_resource" "upload_caddy_config" {
   }
 }
 
-resource "null_resource" "upload_caddy_certs" {
+resource "docker_image" "caddy" {
+  name = "caddy:2.11.4-alpine"
+}
+
+locals {
+  caddy_image = "caddy-l4:2.11.4"
+}
+
+resource "null_resource" "upload_caddy_dockerfile" {
   depends_on = [null_resource.setup_server_dirs]
 
   connection {
@@ -72,26 +74,43 @@ resource "null_resource" "upload_caddy_certs" {
   }
 
   provisioner "file" {
-    source      = "${path.module}/certs/"
-    destination = "/opt/stacks/caddy/certs"
+    source      = "${path.module}/Dockerfile"
+    destination = "/opt/stacks/caddy/Dockerfile"
+  }
+}
+
+resource "null_resource" "build_caddy_image" {
+  depends_on = [null_resource.upload_caddy_dockerfile]
+
+  triggers = {
+    dockerfile = filesha256("${path.module}/Dockerfile")
+  }
+
+  connection {
+    type        = "ssh"
+    host        = var.ssh_config.host
+    user        = var.ssh_config.user
+    private_key = file(var.ssh_config.key)
   }
 
   provisioner "remote-exec" {
     inline = [
-      "find /opt/stacks/caddy/certs -type d -exec chmod 700 {} \\;",
-      "find /opt/stacks/caddy/certs -type f -exec chmod 600 {} \\;"
+      "docker build -t ${local.caddy_image} /opt/stacks/caddy"
     ]
   }
 }
 
-resource "docker_image" "caddy" {
-  name = "caddy:2.11.4-alpine"
-}
-
 resource "docker_container" "caddy" {
-  name      = "caddy"
-  image     = docker_image.caddy.image_id
-  restart   = "always"
+  name    = "caddy"
+  image   = local.caddy_image
+  restart = "always"
+
+  user = "1001:1001"
+
+  depends_on = [
+    null_resource.build_caddy_image,
+    null_resource.upload_caddy_config,
+  ]
 
   volumes {
     host_path      = "/opt/stacks/caddy/config"
@@ -100,9 +119,19 @@ resource "docker_container" "caddy" {
   }
 
   volumes {
-    host_path      = "/opt/stacks/caddy/certs"
-    container_path = "/data/caddy/certificates/local"
+    host_path      = "/opt/stacks/caddy/ca/certs"
+    container_path = "/etc/ca"
     read_only      = true
+  }
+
+  volumes {
+    host_path      = "/opt/stacks/caddy/data"
+    container_path = "/data/caddy"
+  }
+
+  volumes {
+    host_path      = "/var/stacks/caddy/log"
+    container_path = "/var/log/caddy"
   }
 
   ports {
@@ -115,7 +144,38 @@ resource "docker_container" "caddy" {
     external = 443
   }
 
+  ports {
+    internal = 8883
+    external = 8883
+  }
+
   networks_advanced {
-    name = var.network_name
+    name    = var.network_name
+    aliases = local.host_network_aliases
+  }
+}
+
+resource "null_resource" "reload_caddy" {
+  depends_on = [
+    docker_container.caddy,
+    null_resource.upload_caddy_config,
+  ]
+
+  triggers = {
+    caddyfile = filesha256("${path.module}/config/Caddyfile")
+  }
+
+  connection {
+    type        = "ssh"
+    host        = var.ssh_config.host
+    user        = var.ssh_config.user
+    private_key = file(var.ssh_config.key)
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sleep 3",
+      "docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || docker restart caddy",
+    ]
   }
 }
