@@ -53,7 +53,7 @@ resource "docker_container" "forgejo" {
   }
 
   volumes {
-    volume_name    = local.data_path
+    host_path      = local.data_path
     container_path = "/var/lib/gitea"
   }
 

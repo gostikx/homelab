@@ -107,6 +107,19 @@ resource "docker_container" "caddy" {
 
   user = "1001:1001"
 
+  command = ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile", "--watch"]
+
+  healthcheck {
+    test         = ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:2019/config/"]
+    interval     = "10s"
+    timeout      = "5s"
+    start_period = "5s"
+    retries      = 3
+  }
+
+  wait         = true
+  wait_timeout = 30
+
   depends_on = [
     null_resource.build_caddy_image,
     null_resource.upload_caddy_config,
@@ -152,30 +165,5 @@ resource "docker_container" "caddy" {
   networks_advanced {
     name    = var.network_name
     aliases = local.host_network_aliases
-  }
-}
-
-resource "null_resource" "reload_caddy" {
-  depends_on = [
-    docker_container.caddy,
-    null_resource.upload_caddy_config,
-  ]
-
-  triggers = {
-    caddyfile = filesha256("${path.module}/config/Caddyfile")
-  }
-
-  connection {
-    type        = "ssh"
-    host        = var.ssh_config.host
-    user        = var.ssh_config.user
-    private_key = file(var.ssh_config.key)
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sleep 3",
-      "docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || docker restart caddy",
-    ]
   }
 }
