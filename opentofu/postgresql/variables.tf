@@ -1,15 +1,15 @@
-variable "network_name"     { type = string }
+variable "network_name" { type = string }
 variable "ssh_config" {
   type = object({
-    host        = string
-    port        = number
-    user        = string
-    key         = string
+    host = string
+    port = number
+    user = string
+    key  = string
   })
 }
 variable "postgres_config" {
   type = object({
-    user      = string
-    password  = string
+    user     = string
+    password = string
   })
 }
