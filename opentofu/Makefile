@@ -1,15 +1,11 @@
-# Корневой Makefile homelab/opentofu — единая точка входа для управления сервисами.
-#
-# ВАЖНО: команды запускаются из каталога opentofu/ (например: make deploy-caddy),
-# т.к. пути backend.tfvars / variables.tfvars заданы относительно него.
-# Цели сервисов вынесены в <service>/Makefile и подключаются ниже через include.
-
 include caddy/Makefile
 include forgejo/Makefile
 include home-assistant/Makefile
 include mosquitto/Makefile
 include portainer/Makefile
 include postgresql/Makefile
+include small-step-ca/Makefile
+include adguard/Makefile
 
 # Файлы конфигурации относительно каталога opentofu/ (откуда запускается make).
 BACKEND_CONFIG := backend.tfvars
@@ -18,6 +14,9 @@ VAR_FILE       := variables.tfvars
 .DEFAULT_GOAL := help
 
 .PHONY: help init deploy-network destroy-network
+
+init-update: #? Обновить или пересоздать провайдеры
+	tofu init -upgrade -backend-config="$(BACKEND_CONFIG)"
 
 init: #? Инициализировать провайдеры и создать все рабочие пространства (workspaces)
 	tofu init -backend-config="$(BACKEND_CONFIG)"
@@ -28,6 +27,8 @@ init: #? Инициализировать провайдеры и создать
 	tofu workspace select -or-create postgresql
 	tofu workspace select -or-create home_assistant
 	tofu workspace select -or-create mosquitto
+	tofu workspace select -or-create smallstep-ca
+	tofu workspace select -or-create adguard-home
 
 deploy-network: #? Создать общую docker-сеть homelab-network (нужна до запуска сервисов)
 	tofu workspace select network

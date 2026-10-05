@@ -48,8 +48,6 @@ resource "docker_container" "step-ca" {
   ]
 
   volumes {
-    # host_path, а не volume_name: data_path — это путь (/opt/stacks/...),
-    # docker не допускает слэши в именах томов (invalid volume name).
     host_path      = local.data_path
     container_path = "/home/step"
   }
