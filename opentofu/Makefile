@@ -13,7 +13,7 @@ VAR_FILE       := variables.tfvars
 
 .DEFAULT_GOAL := help
 
-.PHONY: help init deploy-network destroy-network
+.PHONY: help init deploy-network destroy-network lint
 
 init-update: #? Обновить или пересоздать провайдеры
 	tofu init -upgrade -backend-config="$(BACKEND_CONFIG)"
@@ -37,6 +37,10 @@ deploy-network: #? Создать общую docker-сеть homelab-network (н
 destroy-network: #? Удалить общую docker-сеть (сначала остановите все сервисы)
 	tofu workspace select network
 	tofu apply -destroy -var-file="$(VAR_FILE)" -auto-approve
+
+lint: #? Проверить форматирование и валидность конфигурации
+	tofu fmt -check -recursive
+	tofu validate
 
 help: #? Показать этот список команд
 	@printf "\033[34;01mУправление сервисами homelab (OpenTofu):\033[0m\n"
