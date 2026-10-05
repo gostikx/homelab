@@ -1,5 +1,3 @@
-# Цели сервиса Portainer (веб-UI для управления Docker).
-# Подключается из ../Makefile — запускать из каталога opentofu/.
 .PHONY: deploy-portainer destroy-portainer
 
 deploy-portainer: #? Развернуть Portainer — веб-UI для управления Docker

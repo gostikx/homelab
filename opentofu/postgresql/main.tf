@@ -47,7 +47,7 @@ resource "docker_container" "postgres" {
 
   volumes {
     host_path      = local.data_path
-    container_path = "/var/lib/postgresql/data"
+    container_path = "/var/lib/postgresql"
   }
 
   healthcheck {
