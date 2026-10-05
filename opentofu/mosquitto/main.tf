@@ -78,6 +78,17 @@ resource "docker_container" "mosquitto" {
     "TZ=Europe/Moscow"
   ]
 
+  healthcheck {
+    test         = ["CMD-SHELL", "mosquitto_sub -h 127.0.0.1 -p 1883 -t '$SYS/broker/uptime' -C 1 -W 15 || exit 1"]
+    start_period = "10s"
+    interval     = "30s"
+    timeout      = "20s"
+    retries      = 3
+  }
+
+  wait         = true
+  wait_timeout = 60
+
   networks_advanced {
     name = var.network_name
   }

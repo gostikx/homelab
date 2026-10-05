@@ -57,6 +57,17 @@ resource "docker_container" "forgejo" {
     container_path = "/var/lib/gitea"
   }
 
+  healthcheck {
+    test         = ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:3000/api/healthz || exit 1"]
+    start_period = "30s"
+    interval     = "10s"
+    timeout      = "5s"
+    retries      = 5
+  }
+
+  wait         = true
+  wait_timeout = 120
+
   networks_advanced {
     name = var.network_name
   }

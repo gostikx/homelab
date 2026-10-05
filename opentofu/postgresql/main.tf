@@ -51,14 +51,15 @@ resource "docker_container" "postgres" {
   }
 
   healthcheck {
-    test = ["CMD", "pg_isready", "-U", "postgres"]
-
-    start_period = "5s"
-
-    interval = "10s"
-    timeout  = "5s"
-    retries  = 5
+    test         = ["CMD-SHELL", "pg_isready -U ${var.postgres_config.user} || exit 1"]
+    start_period = "30s"
+    interval     = "10s"
+    timeout      = "5s"
+    retries      = 5
   }
+
+  wait         = true
+  wait_timeout = 120
 
   networks_advanced {
     name = var.network_name

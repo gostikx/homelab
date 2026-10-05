@@ -1,34 +1,3 @@
-# variable "network_name" { type = string }
-# variable "ssh_config" {
-#   type = object({
-#     host        = string
-#     port        = number
-#     user        = string
-#     key         = string
-#   })
-# }
-
-# terraform {
-#   required_providers {
-#     docker = {
-#       source  = "kreuzwerker/docker"
-#       version  = ">= 4.0.0" 
-#     }
-#     null = {
-#       source  = "hashicorp/null"
-#       version = ">= 3.0.0"
-#     }
-#     http = {
-#       source  = "hashicorp/http"
-#       version  = ">= 3.4"
-#     }
-#     local = {
-#       source  = "hashicorp/local"
-#       version  = ">= 2.5"
-#     }
-#   }
-# }
-
 resource "null_resource" "extract_hacs_locally" {
   provisioner "local-exec" {
     command = "mkdir -p .tmp/hacs && unzip -o hacs.zip -d .tmp/hacs/"
@@ -105,10 +74,6 @@ resource "docker_container" "home_assistant" {
   image   = docker_image.home_assistant.image_id
   restart = "always"
 
-  # HA и mosquitto живут в одной docker-сети (homelab-network): HA обращается
-  # к брокеру по имени контейнера (mosquitto:1883) напрямую, без TLS.
-  # ВНИМАНИЕ: если понадобится mDNS/SSDP-обнаружение устройств, верните
-  # network_mode = "host" и опубликуйте mosquitto на 127.0.0.1:1883 вместо этого.
   env = [
     "TZ=Europe/Moscow"
   ]
@@ -117,6 +82,17 @@ resource "docker_container" "home_assistant" {
     host_path      = "/opt/stacks/homeassistant/config"
     container_path = "/config"
   }
+
+  healthcheck {
+    test         = ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8123/manifest.json || exit 1"]
+    start_period = "60s"
+    interval     = "30s"
+    timeout      = "10s"
+    retries      = 5
+  }
+
+  wait         = true
+  wait_timeout = 180
 
   networks_advanced {
     name = var.network_name

@@ -46,16 +46,17 @@ resource "docker_container" "portainer-ce" {
   }
 
   networks_advanced {
-    name    = var.network_name
+    name = var.network_name
   }
 
   healthcheck {
-    test = ["CMD-SHELL", "wget --spider -q http://127.0.0.1:9000 || exit 1"]
-
-    start_period = "5s"
-
-    interval = "10s"
-    timeout  = "5s"
-    retries  = 5
+    test         = ["CMD-SHELL", "wget --spider -q http://127.0.0.1:9000 || exit 1"]
+    start_period = "10s"
+    interval     = "10s"
+    timeout      = "5s"
+    retries      = 5
   }
+
+  wait         = true
+  wait_timeout = 60
 }

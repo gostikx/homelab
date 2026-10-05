@@ -48,6 +48,17 @@ resource "docker_container" "adguard-home" {
     container_path = "/opt/adguardhome/conf"
   }
 
+  healthcheck {
+    test         = ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/ || exit 1"]
+    start_period = "10s"
+    interval     = "30s"
+    timeout      = "5s"
+    retries      = 3
+  }
+
+  wait         = true
+  wait_timeout = 60
+
   networks_advanced {
     name = var.network_name
   }

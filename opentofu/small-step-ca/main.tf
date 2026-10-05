@@ -58,6 +58,17 @@ resource "docker_container" "step-ca" {
     read_only      = true
   }
 
+  healthcheck {
+    test         = ["CMD-SHELL", "step ca health --ca-url https://127.0.0.1:9000 --root /home/step/certs/root_ca.crt | grep -q '^ok' || exit 1"]
+    start_period = "15s"
+    interval     = "10s"
+    timeout      = "5s"
+    retries      = 5
+  }
+
+  wait         = true
+  wait_timeout = 60
+
   networks_advanced {
     name    = var.network_name
     aliases = [local.network_host_alias]

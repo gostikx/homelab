@@ -110,10 +110,10 @@ resource "docker_container" "caddy" {
   command = ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile", "--watch"]
 
   healthcheck {
-    test         = ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:2019/config/"]
+    test         = ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:2019/config/ || exit 1"]
+    start_period = "5s"
     interval     = "10s"
     timeout      = "5s"
-    start_period = "5s"
     retries      = 3
   }
 
