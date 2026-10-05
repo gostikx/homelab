@@ -1,23 +1,25 @@
-variable "network_name" { type = string }
-variable "ssh_config" {
-  type = object({
-    host        = string
-    port        = number
-    user        = string
-    key         = string
-  })
+locals {
+  data_path = "/opt/stacks/forgejo/data"
+  user = {
+    uid = 1001
+    gid = 1001
+  }
 }
 
-terraform {
-  required_providers {
-    docker = {
-      source  = "kreuzwerker/docker"
-      version  = ">= 4.0.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = ">= 3.0.0"
-    }
+resource "null_resource" "setup_server_dirs" {
+  connection {
+    type        = "ssh"
+    host        = var.ssh_config.host
+    user        = var.ssh_config.user
+    private_key = file(var.ssh_config.key)
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p ${local.data_path}",
+      "chmod 700 ${local.data_path}",
+      "chown -R ${local.user.uid}:${local.user.gid} ${local.data_path}"
+    ]
   }
 }
 
@@ -25,21 +27,24 @@ resource "docker_image" "forgejo" {
   name = "codeberg.org/forgejo/forgejo:16.0.3-rootless"
 }
 
-resource "docker_volume" "forgejo-data" {
-  name = "forgejo_data"
-}
-
 resource "docker_container" "forgejo" {
-  name      = "forgejo"
-  image     = docker_image.forgejo.image_id
-  restart   = "always"
+  depends_on = [null_resource.setup_server_dirs]
 
-  user = "1000:1000"
+  name    = "forgejo"
+  image   = docker_image.forgejo.image_id
+  restart = "always"
+
+  user = "${local.user.uid}:${local.user.gid}"
 
   env = [
-    "USER_UID=1000",
-    "USER_GID=1000",
+    "USER_UID=${local.user.uid}",
+    "USER_GID=${local.user.gid}",
   ]
+
+  ports {
+    internal = 22
+    external = 2222
+  }
 
   volumes {
     host_path      = "/etc/localtime"
@@ -48,8 +53,8 @@ resource "docker_container" "forgejo" {
   }
 
   volumes {
-    volume_name    = docker_volume.forgejo-data.name
-    container_path = "/data"
+    volume_name    = local.data_path
+    container_path = "/var/lib/gitea"
   }
 
   networks_advanced {
