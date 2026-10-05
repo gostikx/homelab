@@ -27,6 +27,9 @@ resource "docker_container" "portainer-ce" {
   image   = docker_image.portainer-ce.image_id
   restart = "always"
 
+  user = "1001:1001"
+  group_add = [ var.docker_group_id ]
+
   command = [
     "--admin-password=${local.password_hash}"
   ]
