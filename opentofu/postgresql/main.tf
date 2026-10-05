@@ -35,8 +35,8 @@ resource "docker_container" "postgres" {
 
   env = [
     "PGDATA=/var/lib/postgresql/data/pgdata",
-    "POSTGRES_USER=${var.postgres_config.user}",
-    "POSTGRES_PASSWORD=${var.postgres_config.password}"
+    "POSTGRES_USER=${nonsensitive(var.postgres_config.user)}",
+    "POSTGRES_PASSWORD=${var.postgres_config.password}" # sensitive (см. variables.tf)
   ]
 
   volumes {
@@ -51,7 +51,7 @@ resource "docker_container" "postgres" {
   }
 
   healthcheck {
-    test         = ["CMD-SHELL", "pg_isready -U ${var.postgres_config.user} || exit 1"]
+    test         = ["CMD-SHELL", "pg_isready -U ${nonsensitive(var.postgres_config.user)} || exit 1"]
     start_period = "30s"
     interval     = "10s"
     timeout      = "5s"

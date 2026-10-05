@@ -12,4 +12,8 @@ variable "postgres_config" {
     user     = string
     password = string
   })
+
+  # sensitive скрывает объект целиком, но секрет — только password:
+  # user в main.tf подключается через nonsensitive() (в env и в healthcheck).
+  sensitive = true
 }

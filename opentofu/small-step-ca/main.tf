@@ -42,8 +42,8 @@ resource "docker_container" "step-ca" {
     "STEPPATH=/home/step",
     "DOCKER_STEPCA_INIT_ACME=true",
     "DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT=false",
-    "DOCKER_STEPCA_INIT_NAME=${var.smallstep_config.issuer}",
-    "DOCKER_STEPCA_INIT_DNS_NAMES=${join(",", var.smallstep_config.dns_names)}",
+    "DOCKER_STEPCA_INIT_NAME=${nonsensitive(var.smallstep_config.issuer)}",
+    "DOCKER_STEPCA_INIT_DNS_NAMES=${join(",", nonsensitive(var.smallstep_config.dns_names))}",
     "DOCKER_STEPCA_INIT_PASSWORD=${sensitive(var.smallstep_config.password)}",
   ]
 

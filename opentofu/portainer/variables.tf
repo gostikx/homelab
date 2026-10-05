@@ -13,6 +13,9 @@ variable "portainer_admin" {
     password = string
   })
 
+  # Секрет — пароль администратора (единственное поле объекта), скрыт целиком.
+  sensitive = true
+
   # validation {
   #   condition     = contains(var.portainer_admin.password, "")
   #   error_message = "Добавьте acme.homelab.dev в smallstep_config.dns_names (см. local.ca_alias в main.tf)."

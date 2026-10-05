@@ -15,8 +15,12 @@ variable "smallstep_config" {
     password  = string
   })
 
+  # sensitive скрывает объект целиком, но секрет — только password:
+  # issuer/dns_names в main.tf читаются через nonsensitive().
+  sensitive = true
+
   validation {
-    condition     = contains(var.smallstep_config.dns_names, "acme.homelab.dev")
+    condition     = contains(nonsensitive(var.smallstep_config.dns_names), "acme.homelab.dev")
     error_message = "Добавьте acme.homelab.dev в smallstep_config.dns_names"
   }
 }
