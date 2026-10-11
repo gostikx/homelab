@@ -1,5 +1,18 @@
-# Exclude files for opentofu
-opentofu/.terraform
+# ---- OpenTofu ----
+# Рабочий каталог инициализации (провайдеры + ссылки на модули), создаётся `tofu init`
+stacks/*/.terraform/
 
-opentofu/variables.tfvars
-opentofu/backend.tfvars
+# Секреты: значения переменных (один файл на все стеки) и путь к бэкенду
+variables.tfvars
+stacks/*/backend.tfvars
+
+# Локальное состояние и его резервные копии (рабочий state лежит вне репозитория,
+# в ~/.opentofu/shared-states/<стек>/)
+stacks/*/*.tfstate
+stacks/*/*.tfstate.*.backup
+
+# Временные артефакты модуля home-assistant (скачанный архив и его распаковка)
+modules/home-assistant/*.zip
+modules/home-assistant/.tmp*/
+modules/home-assistant/.tmp_extracted_*/
+
