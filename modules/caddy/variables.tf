@@ -15,7 +15,7 @@ variable "ca_root_path" {
 variable "host_aliases" {
   description = <<-EOT
     Сетевые алиасы контейнера в docker-сети = DNS-имена сайтов, которые обслуживает Caddy.
-    Пустой список → без алиасов.
+    Пустой список → без алиасов. Имя mqtt-сайта (local.mqtt_dns) модуль добавляет сам.
   EOT
 
   type    = list(string)
@@ -40,4 +40,11 @@ variable "services" {
     dns       = string
     container = string
   }))
+}
+variable "mqtt" {
+  type = object({
+    external_port = number
+    dns           = string
+    container     = string
+  })
 }

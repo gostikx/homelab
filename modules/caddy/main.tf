@@ -17,7 +17,7 @@ module "setup_dirs" {
     { path = "${local.config_path}", mode = "700" },
     { path = "${local.data_path}", mode = "700" },
     { path = "${local.certs_path}", mode = "700" },
-    { path = "${local.log_path}", mode = "660" },
+    { path = "${local.log_path}", mode = "700" },
     { path = "${local.certs_path}/certs", mode = "700" },
   ]
 
@@ -32,6 +32,7 @@ locals {
     services          = var.services
     acme_url          = var.acme.url
     acme_ca_root_path = var.acme.ca_root_path
+    mqtt              = var.mqtt
   })
   caddyfile_hash = sha256(local.caddyfile)
 }
@@ -70,6 +71,8 @@ module "upload_caddy_dockerfile" {
   local_path  = "${path.module}/Dockerfile"
   remote_path = "/opt/stacks/caddy/Dockerfile"
 
+  triggers_replace = { dockerfile = filesha256("${path.module}/Dockerfile") }
+
   depends_on = [module.setup_dirs]
 }
 
@@ -100,6 +103,12 @@ resource "docker_container" "caddy" {
   restart = "always"
 
   user = "1001:1001"
+
+  capabilities {
+    drop = ["ALL"]
+  }
+
+  security_opts = ["no-new-privileges:true"]
 
   command = ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile", "--watch"]
 
