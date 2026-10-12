@@ -11,8 +11,7 @@ stacks/*/backend.tfvars
 stacks/*/*.tfstate
 stacks/*/*.tfstate.*.backup
 
-# Временные артефакты модуля home-assistant (скачанный архив и его распаковка)
-modules/home-assistant/*.zip
-modules/home-assistant/.tmp*/
-modules/home-assistant/.tmp_extracted_*/
+# Кэш скачивания плагинов: plugins/downloader кладёт архивы и распаковку в .tmp/ стека
+# (<стек>/.tmp/<имя>.archive + <стек>/.tmp/extracted/<имя>)
+stacks/*/.tmp*
 
