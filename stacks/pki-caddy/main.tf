@@ -20,10 +20,7 @@ module "caddy" {
   acme         = var.acme
   services     = var.services
 
-  host_aliases = concat(
-    [for svc in var.services : svc.dns],
-    [],
-  )
+  host_aliases = [for svc in var.services : svc.dns]
 
   ca_root_path = module.smallstep_ca.ca_root_path
 
