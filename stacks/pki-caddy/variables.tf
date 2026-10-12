@@ -36,3 +36,10 @@ variable "services" {
     container = string
   }))
 }
+variable "mqtt" {
+  type = object({
+    external_port = number
+    dns           = string
+    container     = string
+  })
+}
