@@ -1,5 +1,10 @@
-variable "network_name" { type = string }
+variable "network_name" {
+  description = "Имя общей docker-сети homelab, в которой запускается контейнер (стек проверяет её через data.docker_network)"
+  type        = string
+}
+
 variable "ssh_config" {
+  description = "Доступ к docker-хосту по SSH: host, port, user и key (путь к приватному ключу)"
   type = object({
     host = string
     port = number
@@ -7,27 +12,32 @@ variable "ssh_config" {
     key  = string
   })
 }
+
 variable "ca_root_path" {
   type        = string
   description = "Путь к root сертификату"
   default     = ""
 }
+
 variable "host_aliases" {
   description = <<-EOT
     Сетевые алиасы контейнера в docker-сети = DNS-имена сайтов, которые обслуживает Caddy
     (нужны, чтобы CA при выпуске по http-01 резолвила запрашиваемое имя). Пустой список → без алиасов.
-    Имя mqtt-сайта (mqtt.dns) стек добавляет сам и только при use_tls = true (после §2.17).
+    Имя mqtt-сайта (mqtt.dns) стек добавляет сам и только при use_tls = true.
   EOT
 
   type    = list(string)
   default = []
 }
+
 variable "acme" {
+  description = "Параметры ACME-клиента Caddy: url — адрес ACME-директории step-ca, ca_root_path — каталог с корневыми сертификатами CA на docker-хосте (копируются в /etc/ca контейнера)"
   type = object({
     url          = string
     ca_root_path = string
   })
 }
+
 variable "services" {
   description = <<-EOT
     Сервисы, которые Caddy публикует наружу (рендерятся в Caddyfile.tftpl циклом).
@@ -42,6 +52,7 @@ variable "services" {
     container = string
   }))
 }
+
 variable "mqtt" {
   description = <<-EOT
     Публикация MQTT-брокера наружу через Caddy (layer4, только TLS).

@@ -1,5 +1,10 @@
-variable "network_name" { type = string }
+variable "network_name" {
+  description = "Имя общей docker-сети homelab (стек проверяет её через data.docker_network)"
+  type        = string
+}
+
 variable "ssh_config" {
+  description = "Доступ к docker-хосту по SSH: host, port, user и key (путь к приватному ключу)"
   type = object({
     host = string
     port = number
@@ -7,6 +12,7 @@ variable "ssh_config" {
     key  = string
   })
 }
+
 variable "plugins" {
   description = "Плагины (кастомные интеграции) для home-assistant: subdir — каталог внутри архива, который уходит в config/custom_components/<name>"
   type = list(object({

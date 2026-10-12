@@ -1,5 +1,10 @@
-variable "network_name" { type = string }
+variable "network_name" {
+  description = "Имя общей docker-сети homelab, в которой запускается контейнер (стек проверяет её через data.docker_network)"
+  type        = string
+}
+
 variable "ssh_config" {
+  description = "Доступ к docker-хосту по SSH: host, port, user и key (путь к приватному ключу)"
   type = object({
     host = string
     port = number
@@ -9,6 +14,7 @@ variable "ssh_config" {
 }
 
 variable "adguard_config" {
+  description = "Настройки AdGuard Home, которые рендерятся в AdGuardHome.yaml: слушающий адрес, DoH без проверки сертификата, логин, язык, тема, bind-хосты, upstream-DNS и доверенные прокси Caddy"
   type = object({
     http_address    = optional(string, "0.0.0.0:3000")
     doh_insecure    = optional(bool, true)
@@ -24,6 +30,7 @@ variable "adguard_config" {
 }
 
 variable "adguard_admin" {
+  description = "Пароль администратора AdGuard Home в виде bcrypt-хеша: конфиг рендерится в файл, поэтому пароль берётся уже захэшированным"
   type = object({
     password_hash = string
   })

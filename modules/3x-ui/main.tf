@@ -1,7 +1,3 @@
-locals {
-  data_path = "/opt/stacks/3x-ui/data"
-}
-
 module "setup_dirs" {
   source = "../../plugins/setup_dirs"
 

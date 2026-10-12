@@ -1,5 +1,10 @@
-variable "network_name" { type = string }
+variable "network_name" {
+  description = "Имя общей docker-сети homelab (стек проверяет её через data.docker_network)"
+  type        = string
+}
+
 variable "ssh_config" {
+  description = "Доступ к docker-хосту по SSH: host, port, user и key (путь к приватному ключу)"
   type = object({
     host = string
     port = number
@@ -7,7 +12,9 @@ variable "ssh_config" {
     key  = string
   })
 }
+
 variable "portainer_admin" {
+  description = "Учётные данные администратора Portainer: password — пароль в открытом виде, из него считается bcrypt-хеш для флага --admin-password"
   type = object({
     password = string
   })

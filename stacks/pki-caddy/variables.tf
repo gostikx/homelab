@@ -1,5 +1,10 @@
-variable "network_name" { type = string }
+variable "network_name" {
+  description = "Имя общей docker-сети homelab (стек проверяет её через data.docker_network)"
+  type        = string
+}
+
 variable "ssh_config" {
+  description = "Доступ к docker-хосту по SSH: host, port, user и key (путь к приватному ключу)"
   type = object({
     host = string
     port = number
@@ -7,7 +12,9 @@ variable "ssh_config" {
     key  = string
   })
 }
+
 variable "smallstep_config" {
+  description = "Первичная инициализация step-ca: issuer — имя CA, dns_names — SAN-ы сертификата (обязателен acme.homelab.dev), password — пароль admin-провижионера"
   type = object({
     issuer    = string
     dns_names = list(string)
@@ -16,12 +23,15 @@ variable "smallstep_config" {
 
   sensitive = true
 }
+
 variable "acme" {
+  description = "Параметры ACME-клиента Caddy: url — адрес ACME-директории step-ca, ca_root_path — каталог с корневыми сертификатами CA на docker-хосте"
   type = object({
     url          = string
     ca_root_path = string
   })
 }
+
 variable "services" {
   description = <<-EOT
     Сервисы, которые Caddy публикует наружу (рендерятся в Caddyfile.tftpl циклом).
@@ -36,6 +46,7 @@ variable "services" {
     container = string
   }))
 }
+
 variable "mqtt" {
   description = <<-EOT
     Публикация MQTT-брокера наружу через Caddy (layer4). См. modules/caddy/variables.tf.

@@ -1,5 +1,10 @@
-variable "network_name" { type = string }
+variable "network_name" {
+  description = "Имя общей docker-сети homelab, в которой запускается контейнер (стек проверяет её через data.docker_network)"
+  type        = string
+}
+
 variable "ssh_config" {
+  description = "Доступ к docker-хосту по SSH: host, port, user и key (путь к приватному ключу)"
   type = object({
     host = string
     port = number
@@ -9,6 +14,7 @@ variable "ssh_config" {
 }
 
 variable "smallstep_config" {
+  description = "Первичная инициализация step-ca: issuer — имя CA, dns_names — SAN-ы сертификата (обязателен acme.homelab.dev), password — пароль admin-провижионера"
   type = object({
     issuer    = string
     dns_names = list(string)

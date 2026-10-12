@@ -1,12 +1,3 @@
-locals {
-  stack_path  = "/opt/stacks/caddy"
-  config_path = "${local.stack_path}/config"
-  data_path   = "${local.stack_path}/data"
-  certs_path  = "${local.stack_path}/ca"
-
-  log_path = "/var/stacks/caddy/log"
-}
-
 module "setup_dirs" {
   source = "../../plugins/setup_dirs"
 
@@ -25,16 +16,6 @@ module "setup_dirs" {
     { from = "${var.ca_root_path}/root_ca.crt", to = "${local.certs_path}/certs/root_ca.crt" },
     { from = "${var.ca_root_path}/intermediate_ca.crt", to = "${local.certs_path}/certs/intermediate_ca.crt" },
   ]
-}
-
-locals {
-  caddyfile = templatefile("${path.module}/config/Caddyfile.tftpl", {
-    services          = var.services
-    acme_url          = var.acme.url
-    acme_ca_root_path = var.acme.ca_root_path
-    mqtt              = var.mqtt
-  })
-  caddyfile_hash = sha256(local.caddyfile)
 }
 
 module "upload_caddy_config" {
@@ -58,10 +39,6 @@ module "upload_caddy_config" {
 
 resource "docker_image" "caddy" {
   name = "caddy:2.11.4-alpine"
-}
-
-locals {
-  caddy_image = "caddy-l4:2.11.4"
 }
 
 module "upload_caddy_dockerfile" {

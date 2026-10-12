@@ -1,13 +1,3 @@
-locals {
-  data_path = "/opt/stacks/postgres/data"
-  # Пользователь внутри контейнера: postgres (999/999)
-  # Пользователь внутри контейнера alpine: postgres (70/70)
-  user = {
-    uid = 70
-    gid = 70
-  }
-}
-
 module "setup_dirs" {
   source = "../../plugins/setup_dirs"
 
