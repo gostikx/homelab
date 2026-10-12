@@ -65,7 +65,7 @@ resource "terraform_data" "upload_home_assistant_config" {
   triggers_replace = {
     config       = local.configuration_hash
     http_storage = local.http_storage_hash
-    plugins = sha256(join(",", [for name in sort(keys(local.plugins)) : module.download_plugins[name].spec_hash]))
+    plugins      = sha256(join(",", [for name in sort(keys(local.plugins)) : module.download_plugins[name].spec_hash]))
   }
 }
 
@@ -120,7 +120,7 @@ resource "docker_container" "home_assistant" {
   }
 
   healthcheck {
-    test = ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8123/manifest.json || exit 1"]
+    test         = ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:8123/manifest.json || exit 1"]
     start_period = "1m0s"
     interval     = "30s"
     timeout      = "10s"
