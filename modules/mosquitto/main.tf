@@ -13,7 +13,7 @@ module "setup_dirs" {
     { path = local.stack_path, mode = "700" },
     { path = local.config_path, mode = "700" },
     { path = local.data_path, mode = "700" },
-    { path = local.log_path, mode = "660" },
+    { path = local.log_path, mode = "700" },
   ]
 }
 
@@ -24,9 +24,11 @@ module "upload_config" {
   local_path  = "${path.module}/config/mosquitto.conf"
   remote_path = "${local.config_path}/mosquitto.conf"
 
+  triggers_replace = { config = filesha256("${path.module}/config/mosquitto.conf") }
+
   commands = [
     "find ${local.config_path} -type d -exec chmod 700 {} \\;",
-    "find ${local.config_path} -type f -exec chmod 600 {} \\;"
+    "find ${local.config_path} -type f -exec chmod 600 {} \\;",
   ]
 
   depends_on = [module.setup_dirs]
