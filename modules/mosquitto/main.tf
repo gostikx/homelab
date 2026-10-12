@@ -45,6 +45,11 @@ resource "docker_container" "mosquitto" {
 
   user = "1001:1001"
 
+  ports {
+    internal = 1883
+    external = 1883
+  }
+
   volumes {
     host_path      = "/etc/localtime"
     container_path = "/etc/localtime"

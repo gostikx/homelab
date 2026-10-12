@@ -160,9 +160,13 @@ resource "docker_container" "caddy" {
     external = 443
   }
 
-  ports {
-    internal = 8883
-    external = 8883
+  dynamic "ports" {
+    for_each = var.mqtt == null || !var.mqtt.use_tls ? [] : [var.mqtt.external_port]
+
+    content {
+      internal = ports.value
+      external = ports.value
+    }
   }
 
   networks_advanced {

@@ -1,7 +1,25 @@
 {
     acme_ca ${ acme_url }
     acme_ca_root ${ acme_ca_root_path }
+%{ if mqtt != null && mqtt.use_tls ~}
+
+    layer4 {
+        :${ mqtt.external_port } {
+            @mqtt tls sni ${ mqtt.dns }
+            route @mqtt {
+                tls
+                proxy ${ mqtt.container }
+            }
+        }
+    }
+%{ endif ~}
 }
+%{ if mqtt != null && mqtt.use_tls ~}
+
+${ mqtt.dns } {
+    respond "MQTT broker: mqtts://${ mqtt.dns }:${ mqtt.external_port }" 200
+}
+%{ endif ~}
 
 %{ for svc in services ~}
 ${ svc.dns } {

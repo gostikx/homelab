@@ -37,9 +37,25 @@ variable "services" {
   }))
 }
 variable "mqtt" {
+  description = <<-EOT
+    Публикация MQTT-брокера наружу через Caddy (layer4). См. modules/caddy/variables.tf.
+
+    null (не задано) или use_tls = false → caddy MQTT не публикует вообще (plain-доступ по IP
+    отдаёт сам mosquitto своим портом 1883).
+    use_tls       — true: layer4 терминирует TLS и матчит SNI = dns (клиент ходит по dns-имени
+                    и обязательно с TLS, сертификат выпускается через ACME);
+    external_port — порт, который слушает layer4 внутри контейнера caddy и публикуется наружу
+                    (используется только при use_tls = true);
+    dns           — имя сайта для SNI и выпуска сертификата (только при use_tls = true);
+    container     — адрес брокера в docker-сети (host:port) для proxy.
+  EOT
+
   type = object({
+    use_tls       = bool
     external_port = number
     dns           = string
     container     = string
   })
+
+  default = null
 }

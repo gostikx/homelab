@@ -23,7 +23,7 @@ module "caddy" {
 
   host_aliases = concat(
     [for svc in var.services : svc.dns],
-    [var.mqtt.dns]
+    var.mqtt == null || !var.mqtt.use_tls ? [] : [var.mqtt.dns]
   )
 
   ca_root_path = module.smallstep_ca.ca_root_path
