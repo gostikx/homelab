@@ -1,20 +1,6 @@
 {
     acme_ca ${ acme_url }
     acme_ca_root ${ acme_ca_root_path }
-
-    layer4 {
-        :8883 {
-            @mqtt tls sni mqtt.homelab.dev
-            route @mqtt {
-                tls
-                proxy mosquitto:1883
-            }
-        }
-    }
-}
-
-mqtt.homelab.dev {
-    respond "MQTT broker: mqtts://mqtt.homelab.dev:8883" 200
 }
 
 %{ for svc in services ~}

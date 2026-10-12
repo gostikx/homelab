@@ -1,19 +1,29 @@
+locals {
+  stack_path  = "/opt/stacks/caddy"
+  config_path = "${local.stack_path}/config"
+  data_path   = "${local.stack_path}/data"
+  certs_path  = "${local.stack_path}/ca"
+
+  log_path = "/var/stacks/caddy/log"
+}
+
 module "setup_dirs" {
   source = "../../plugins/setup_dirs"
 
   ssh_config = var.ssh_config
 
   dirs = [
-    { path = "/opt/stacks/caddy/config", mode = "700" },
-    { path = "/opt/stacks/caddy/data", mode = "700" },
-    { path = "/opt/stacks/caddy/ca", mode = "700" },
-    { path = "/opt/stacks/caddy/ca/certs" },
-    { path = "/var/stacks/caddy/log" },
+    { path = "${local.stack_path}", mode = "700" },
+    { path = "${local.config_path}", mode = "700" },
+    { path = "${local.data_path}", mode = "700" },
+    { path = "${local.certs_path}", mode = "700" },
+    { path = "${local.log_path}", mode = "660" },
+    { path = "${local.certs_path}/certs", mode = "700" },
   ]
 
   copies = [
-    { from = "${var.ca_root_path}/root_ca.crt", to = "/opt/stacks/caddy/ca/certs/root_ca.crt" },
-    { from = "${var.ca_root_path}/intermediate_ca.crt", to = "/opt/stacks/caddy/ca/certs/intermediate_ca.crt" },
+    { from = "${var.ca_root_path}/root_ca.crt", to = "${local.certs_path}/certs/root_ca.crt" },
+    { from = "${var.ca_root_path}/intermediate_ca.crt", to = "${local.certs_path}/certs/intermediate_ca.crt" },
   ]
 }
 
@@ -31,15 +41,15 @@ module "upload_caddy_config" {
 
   ssh_config  = var.ssh_config
   content     = local.caddyfile
-  remote_path = "/opt/stacks/caddy/config/Caddyfile"
+  remote_path = "${local.config_path}/Caddyfile"
 
   triggers_replace = {
     caddyfile = local.caddyfile_hash
   }
 
   commands = [
-    "find /opt/stacks/caddy/config -type d -exec chmod 700 {} \\;",
-    "find /opt/stacks/caddy/config -type f -exec chmod 600 {} \\;"
+    "find ${local.config_path} -type d -exec chmod 700 {} \\;",
+    "find ${local.config_path} -type f -exec chmod 600 {} \\;"
   ]
 
   depends_on = [module.setup_dirs]
@@ -110,24 +120,24 @@ resource "docker_container" "caddy" {
   ]
 
   volumes {
-    host_path      = "/opt/stacks/caddy/config"
+    host_path      = local.config_path
     container_path = "/etc/caddy"
     read_only      = true
   }
 
   volumes {
-    host_path      = "/opt/stacks/caddy/ca/certs"
+    host_path      = "${local.certs_path}/certs"
     container_path = "/etc/ca"
     read_only      = true
   }
 
   volumes {
-    host_path      = "/opt/stacks/caddy/data"
+    host_path      = local.data_path
     container_path = "/data/caddy"
   }
 
   volumes {
-    host_path      = "/var/stacks/caddy/log"
+    host_path      = local.log_path
     container_path = "/var/log/caddy"
   }
 
