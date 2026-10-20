@@ -38,7 +38,8 @@ module "upload_caddy_config" {
 }
 
 resource "docker_image" "caddy" {
-  name = "caddy:2.11.4-alpine"
+  name         = "caddy:2.11.4-alpine"
+  keep_locally = true
 }
 
 module "upload_caddy_dockerfile" {

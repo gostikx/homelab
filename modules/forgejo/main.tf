@@ -8,7 +8,8 @@ module "setup_dirs" {
 }
 
 resource "docker_image" "forgejo" {
-  name = "codeberg.org/forgejo/forgejo:16.0.3-rootless"
+  name         = "codeberg.org/forgejo/forgejo:16.0.3-rootless"
+  keep_locally = true
 }
 
 resource "docker_container" "forgejo" {

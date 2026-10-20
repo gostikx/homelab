@@ -8,7 +8,8 @@ module "setup_dirs" {
 }
 
 resource "docker_image" "step-ca" {
-  name = "smallstep/step-ca:0.30.2"
+  name         = "smallstep/step-ca:0.30.2"
+  keep_locally = true
 }
 
 resource "docker_container" "step-ca" {

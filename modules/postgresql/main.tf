@@ -8,7 +8,8 @@ module "setup_dirs" {
 }
 
 resource "docker_image" "postgres" {
-  name = "postgres:18.6-alpine3.24"
+  name         = "postgres:18.6-alpine3.24"
+  keep_locally = true
 }
 
 resource "docker_container" "postgres" {

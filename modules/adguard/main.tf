@@ -34,7 +34,8 @@ module "upload_adguard_config" {
 }
 
 resource "docker_image" "adguard-home" {
-  name = "adguard/adguardhome:v0.107.79"
+  name         = "adguard/adguardhome:v0.107.79"
+  keep_locally = true
 }
 
 resource "docker_container" "adguard-home" {

@@ -28,7 +28,8 @@ module "upload_config" {
 }
 
 resource "docker_image" "mosquitto" {
-  name = "eclipse-mosquitto:2.1.2-alpine"
+  name         = "eclipse-mosquitto:2.1.2-alpine"
+  keep_locally = true
 }
 
 resource "docker_container" "mosquitto" {

@@ -8,7 +8,8 @@ module "setup_dirs" {
 }
 
 resource "docker_image" "portainer-ce" {
-  name = "portainer/portainer-ce:2.45.0-alpine"
+  name         = "portainer/portainer-ce:2.45.0-alpine"
+  keep_locally = true
 }
 
 resource "docker_container" "portainer-ce" {
